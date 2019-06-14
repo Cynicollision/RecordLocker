@@ -1,0 +1,15 @@
+<template>
+    <lightning-card title="Record Lock" icon-name="custom:custom77">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+        <div class="slds-m-top_medium slds-m-left_medium slds-m-right_medium slds-m-bottom_x-large">
+            <template if:true={isDisabled}>
+                <span>{disabledMessage}</span>
+            </template>
+            <template if:true={isReady}>
+                <c-locker></c-locker>
+            </template>
+        </div>
+    </lightning-card>
+</template>

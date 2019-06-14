@@ -1,0 +1,26 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+    <div>
+        <div class="slds-clearfix">
+            <div class="slds-float_left">
+                <span>{lockStatusMessage}</span>
+            </div>
+            <div class="slds-float_right">
+                <lightning-button-icon icon-name="utility:refresh" onclick={onClickRefresh} alternative-text="Refresh"></lightning-button-icon>
+            </div>
+        </div>
+    </div>
+    <div class="slds-m-bottom_medium">
+        <lightning-button variant="brand" label={lockUnlockButtonText} icon-name={lockUnlockButtonIcon} onclick={onClickLockUnlock} title="Lock/Unlock" disabled={isLockUnlockDisabled}></lightning-button>
+    </div>
+    <div class="slds-m-top_medium">
+        <template if:true={canRequestLockWait}>
+            <span><a role="button" onclick={onClickRequestNotification}>Click here</a> to be notified when this record is available.</span>
+        </template>
+        <template if:true={hasLockWait}>
+            <span>You will be notified when this record is unlocked.</span>
+        </template>
+    </div>
+</template>
