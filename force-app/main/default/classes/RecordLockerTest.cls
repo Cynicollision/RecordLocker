@@ -39,16 +39,16 @@ public with sharing class RecordLockerTest {
         RecordLocker locker = new RecordLocker(new LockValidatorMock(true));
         RecordLocker.LockRequest request = new RecordLocker.LockRequest(testId);
 
-        RecordLocker.LockResult result = locker.lockRecord(request);
+        RecordLocker.LockResult lockResult = locker.lockRecord(request);
         Integer lockCount = [SELECT COUNT() FROM Object_Lock__c];
 
         System.assertEquals(1, lockCount, 'Expected an initial Object Lock record to be created.');
-        System.assertEquals(true, result.didSucceed, 'Expected initial lock request to succeed.');
+        System.assertEquals(true, lockResult.didSucceed, 'Expected initial lock request to succeed.');
 
-        result = locker.unlockRecord(request);
+        RecordLocker.UnlockResult unlockResult = locker.unlockRecord(request);
         lockCount = [SELECT COUNT() FROM Object_Lock__c];
 
-        System.assertEquals(0, lockCount, 'Expected no Object Lock record(s) to be created.');
-        System.assertEquals(true, result.didSucceed, 'Expected unlock request to succeed.');
+        System.assertEquals(0, lockCount, 'Expected the lock to have been released.');
+        System.assertEquals(true, unlockResult.didSucceed, 'Expected unlock request to succeed.');
     }
 }

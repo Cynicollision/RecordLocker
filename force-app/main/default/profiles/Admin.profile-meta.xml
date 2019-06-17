@@ -167,12 +167,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Lock_Config__mdt.Active__c</field>
+        <field>Locker_Config__mdt.Active__c</field>
         <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>Lock_Config__mdt.Timeout__c</field>
+        <field>Locker_Config__mdt.Timeout__c</field>
         <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -191,7 +191,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <layoutAssignments>
-        <layout>Lock_Config__mdt-Lock Config Layout</layout>
+        <layout>Locker_Config__mdt-Lock Config Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>Object_Lock__c-Object Lock Layout</layout>
