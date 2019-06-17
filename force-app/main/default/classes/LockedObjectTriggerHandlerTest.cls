@@ -5,8 +5,7 @@ public with sharing class LockedObjectTriggerHandlerTest {
     public static void test_afterUpdate_lockExpired() {
         Account testAccount = insertTestAccount();
 
-        RecordLocker locker = new RecordLocker(new LockValidatorMock(true));
-        locker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
+        RecordLocker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
 
         // Find the lock and update it to have been expired.
         Object_Lock__c testLock = [SELECT Expires_At__c FROM Object_Lock__c LIMIT 1];
@@ -27,8 +26,7 @@ public with sharing class LockedObjectTriggerHandlerTest {
     public static void test_afterUpdate_lockedByOther() {
         Account testAccount = insertTestAccount();
 
-        RecordLocker locker = new RecordLocker(new LockValidatorMock(true));
-        locker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
+        RecordLocker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
 
         // Find the lock and update it to not be owned by the current user.
         Object_Lock__c testLock = [SELECT User__c FROM Object_Lock__c LIMIT 1];
@@ -54,8 +52,7 @@ public with sharing class LockedObjectTriggerHandlerTest {
     public static void test_afterUpdate_lockedByOtherExpire() {
         Account testAccount = insertTestAccount();
 
-        RecordLocker locker = new RecordLocker(new LockValidatorMock(true));
-        locker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
+        RecordLocker.lockRecord(new RecordLocker.LockRequest(testAccount.Id));
 
         // Find the lock and update it to have been expired and to not be owned by the current user.
         Object_Lock__c testLock = [SELECT Expires_At__c, User__c FROM Object_Lock__c LIMIT 1];

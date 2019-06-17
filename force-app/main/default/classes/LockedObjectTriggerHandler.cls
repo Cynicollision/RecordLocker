@@ -9,11 +9,11 @@ public with sharing class LockedObjectTriggerHandler {
         ];
 
         List<Object_Lock__c> locksToDelete = new List<Object_Lock__c>();
-        LockValidator validator = new LockValidator();
+        RecordLocker locker = new RecordLocker();
         SaveResult result = new SaveResult(true);
 
         for (Object_Lock__c lock : locks) {
-            if (validator.doesCurrentUserOwnLock(lock) || validator.isLockExpired(lock)) {
+            if (LockerUtil.doesCurrentUserOwnLock(lock) || LockerUtil.isLockExpired(lock)) {
                 locksToDelete.add(lock);
             }
             else {
@@ -22,9 +22,9 @@ public with sharing class LockedObjectTriggerHandler {
             }
         }
 
-        if (locksToDelete.size() > 0) {
-            delete locksToDelete;
-        }
+        //if (locksToDelete.size() > 0) {
+        //    delete locksToDelete;
+        //}
 
         return result;
     }
