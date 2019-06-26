@@ -1,45 +1,44 @@
 <template>
-    <template if:true={uiState.isLoading}>
-        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
-    </template>
-    <template if:true={hasError}>
-        <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
-            <span class="slds-assistive-text">error</span>
-            <span class="slds-icon_container slds-icon-utility-error slds-m-right_x-small" title="Description of icon when needed">
-            <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
-                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#error"></use>
-            </svg>
-            </span>
-            <h2>{uiState.errorMessage}</h2>
-            <div class="slds-notify__close">
-            <button class="slds-button slds-button_icon slds-button_icon-small slds-button_icon-inverse" title="Close">
-                <svg class="slds-button__icon" aria-hidden="true">
-                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
-                </svg>
-                <span class="slds-assistive-text">Close</span>
-            </button>
-            </div>
-        </div>
-    </template>
-    <div>
-        <div class="slds-clearfix">
-            <div class="slds-float_left">
-                <span>{uiState.lockStatusMessage}</span>
-            </div>
-            <div class="slds-float_right">
-                <lightning-button-icon icon-name="utility:refresh" onclick={onClickRefresh} alternative-text="Refresh"></lightning-button-icon>
-            </div>
-        </div>
-    </div>
-    <div class="slds-m-bottom_medium">
-        <lightning-button variant="brand" label={lockUnlockButtonText} icon-name={lockUnlockButtonIcon} onclick={onClickLockUnlock} title="Lock/Unlock" disabled={uiState.isLockUnlockDisabled}></lightning-button>
-    </div>
-    <div class="slds-m-top_medium">
-        <template if:false={uiState.isRequestWaitDisabled}>
-            <span><a role="button" onclick={onClickRequestNotification}>Click here</a> to be notified when this record is available.</span>
+    <lightning-card title="Record Lock" icon-name="custom:custom77">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
         </template>
-        <template if:true={uiState.isWaiting}>
-            <span>You will be notified when this record is unlocked.</span>
-        </template>
-    </div>
+        <div class="slds-m-top_medium slds-m-left_medium slds-m-right_medium slds-m-bottom_x-large">
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <span class="slds-icon_container slds-icon-utility-error slds-m-right_x-small" title="error">
+                        <lightning-icon icon-name="utility:error" alternative-text="error" size="small" variant="inverse"></lightning-icon>
+                    </span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+            <template if:true={isDisabled}>
+                <span>{statusMessage}</span>
+            </template>
+            <template if:true={isReady}>
+                <div>
+                    <div class="slds-clearfix">
+                        <div class="slds-float_left">
+                            <span>{statusMessage}</span>
+                        </div>
+                        <div class="slds-float_right">
+                            <lightning-button-icon icon-name="utility:refresh" onclick={onClickRefresh} alternative-text="Refresh"></lightning-button-icon>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-m-bottom_medium">
+                    <lightning-button variant="brand" label={lockUnlockButtonText} icon-name={lockUnlockButtonIcon} onclick={onClickLockUnlock} title="Lock/Unlock" disabled={isLockUnlockDisabled}></lightning-button>
+                </div>
+                <div class="slds-m-top_medium">
+                    <template if:false={isRequestWaitDisabled}>
+                        <span><a role="button" onclick={onClickRequestNotification}>Click here</a> to be notified when this record is available.</span>
+                    </template>
+                    <template if:true={isWaiting}>
+                        <span>You will be notified when this record is unlocked.</span>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
 </template>

@@ -1,13 +1,5 @@
 public with sharing class RecordLocker {
 
-    public class LockRequest {
-        public String sObjectId;
-
-        public LockRequest(String sObjectId) {
-            this.sObjectId = sObjectId;
-        }
-    }
-
     public class ObjectLock {
         public String sObjectId;
         public String userId;
@@ -21,16 +13,16 @@ public with sharing class RecordLocker {
     }
 
     @AuraEnabled
-    public static StatusResult getLockStatus(LockRequest request) {
-        return new RecordLocker().getStatus(request);
+    public static StatusResult getLockStatus(String sObjectId) {
+        return new RecordLocker().getStatus(sObjectId);
     }
 
-    public StatusResult getStatus(LockRequest request) {
-        //try {
+    public StatusResult getStatus(String sObjectId) {
+        try {
             List<Object_Lock__c> locks = [
                 SELECT Id, Expires_At__c, User__r.Name 
                 FROM Object_Lock__c 
-                WHERE sObject_Id__c = :request.sObjectId
+                WHERE sObject_Id__c = :sObjectId
             ];
 
             List<Object_Lock__c> activeLocks = new List<Object_Lock__c>();
@@ -43,14 +35,15 @@ public with sharing class RecordLocker {
             delete expiredLocks;
 
             if (activeLocks.size() == 1) {
-                return new StatusResult(true, false, activeLocks[0].User__r.Name);
+                String userName = activeLocks[0].User__r != null ? activeLocks[0].User__r.Name : 'UNKNOWN';
+                return new StatusResult(true, false, userName);
             }
 
             return new StatusResult(true, true);
-        //}
-        //catch (Exception e) {
-        //    return new StatusResult(false, 'An unexpected error happened: ' + e.getMessage());
-        //}
+        }
+        catch (Exception e) {
+           throw new AuraHandledException(e.getMessage());
+        }
     }
 
     public class StatusResult extends BaseResult {
@@ -78,27 +71,27 @@ public with sharing class RecordLocker {
     }
 
     @AuraEnabled
-    public static LockResult lockRecord(LockRequest request) {
-        return new RecordLocker().lock(request);
+    public static LockResult lockRecord(String sObjectId) {
+        return new RecordLocker().lock(sObjectId);
     }
 
-    public LockResult lock(LockRequest request) {
+    public LockResult lock(String sObjectId) {
         try {
-            StatusResult result = getStatus(request);
+            StatusResult result = getStatus(sObjectId);
 
             if (!result.canLockRecord) {
                 return new LockResult(false, 'This record is locked by ' + result.lockedByUserName);
             }
 
-            Datetime expiresAt = LockerUtil.getExpirationDatetime(request.sObjectId);
+            Datetime expiresAt = LockerUtil.getExpirationDatetime(sObjectId);
             
-            Object_Lock__c lock = new Object_Lock__c(sObject_Id__c = request.sObjectId, Expires_At__c = expiresAt, User__c = UserInfo.getUserId()); 
+            Object_Lock__c lock = new Object_Lock__c(sObject_Id__c = sObjectId, Expires_At__c = expiresAt, User__c = UserInfo.getUserId()); 
             insert lock;
 
             return new LockResult(true, new ObjectLock(lock));
         }
         catch (Exception e) {
-            return new LockResult(false, 'An unexpected error happened: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -117,17 +110,12 @@ public with sharing class RecordLocker {
     }
 
     @AuraEnabled
-    public static UnlockResult unlockRecord(LockRequest request) {
-        return new RecordLocker().unlock(request);
-    }
-
-    public UnlockResult unlock(LockRequest request) {
-        
+    public static UnlockResult unlockRecord(String sObjectId) {
         try {
             List<Object_Lock__c> locks = [
                 SELECT Id
                 FROM Object_Lock__c 
-                WHERE sObject_Id__c = :request.sObjectId 
+                WHERE sObject_Id__c = :sObjectId 
                     AND User__c = :UserInfo.getUserId()
             ];
 
@@ -136,7 +124,7 @@ public with sharing class RecordLocker {
             return new UnlockResult(true);
         }
         catch (Exception e) {
-            return new UnlockResult(false, 'An unexpected error happened: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -151,12 +139,7 @@ public with sharing class RecordLocker {
     }
 
     @AuraEnabled
-    public static WaitResult requestWait(LockRequest request) {
-        return new RecordLocker().wait(request);
-    }
-
-    public WaitResult wait(LockRequest request) {
-
+    public static WaitResult requestWait(String sObjectId) {
         try {
             // TODO: 
             // Integer lockWaitCount = [SELECT COUNT() FROM Object_Lock_Wait__c WHERE sObject_Id__c = :request.sObjectId];

@@ -5,9 +5,6 @@
         "paths": {
             "c/locker": [
                 "locker/locker.js"
-            ],
-            "c/lockerBase": [
-                "lockerBase/lockerBase.js"
             ]
         }
     },
