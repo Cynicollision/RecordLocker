@@ -8,7 +8,7 @@
                 <span>{disabledMessage}</span>
             </template>
             <template if:true={isReady}>
-                <c-locker></c-locker>
+                <c-locker foo={recordId}></c-locker>
             </template>
         </div>
     </lightning-card>

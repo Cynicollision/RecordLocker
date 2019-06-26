@@ -21,12 +21,12 @@ public with sharing class RecordLocker {
     }
 
     @AuraEnabled
-    public static LockStatusResult getLockStatus(LockRequest request) {
+    public static StatusResult getLockStatus(LockRequest request) {
         return new RecordLocker().getStatus(request);
     }
 
-    public LockStatusResult getStatus(LockRequest request) {
-        try {
+    public StatusResult getStatus(LockRequest request) {
+        //try {
             List<Object_Lock__c> locks = [
                 SELECT Id, Expires_At__c, User__r.Name 
                 FROM Object_Lock__c 
@@ -43,36 +43,36 @@ public with sharing class RecordLocker {
             delete expiredLocks;
 
             if (activeLocks.size() == 1) {
-                return new LockStatusResult(true, false, activeLocks[0].User__r.Name);
+                return new StatusResult(true, false, activeLocks[0].User__r.Name);
             }
 
-            return new LockStatusResult(true, true);
-        }
-        catch (Exception e) {
-            return new LockStatusResult(false, 'An unexpected error happened: ' + e.getMessage());
-        }
+            return new StatusResult(true, true);
+        //}
+        //catch (Exception e) {
+        //    return new StatusResult(false, 'An unexpected error happened: ' + e.getMessage());
+        //}
     }
 
-    public class LockStatusResult extends BaseResult {
+    public class StatusResult extends BaseResult {
         @AuraEnabled
         public String lockedByUserName;
 
         @AuraEnabled
         public Boolean canLockRecord;
 
-        public LockStatusResult(Boolean didSucceed, Boolean canLockRecord, String lockedByUserName) {
+        public StatusResult(Boolean didSucceed, Boolean canLockRecord, String lockedByUserName) {
             this(didSucceed, (String)null);
             this.canLockRecord = canLockRecord;
             this.lockedByUserName = lockedByUserName;
         }
 
-        public LockStatusResult(Boolean didSucceed, Boolean canLockRecord) {
+        public StatusResult(Boolean didSucceed, Boolean canLockRecord) {
             this(didSucceed, (String)null);
             this.canLockRecord = canLockRecord;
             this.lockedByUserName = lockedByUserName;
         }
 
-        public LockStatusResult(Boolean didSucceed, String message) {
+        public StatusResult(Boolean didSucceed, String message) {
             super(didSucceed, message);
         }
     }
@@ -84,7 +84,7 @@ public with sharing class RecordLocker {
 
     public LockResult lock(LockRequest request) {
         try {
-            LockStatusResult result = getStatus(request);
+            StatusResult result = getStatus(request);
 
             if (!result.canLockRecord) {
                 return new LockResult(false, 'This record is locked by ' + result.lockedByUserName);
@@ -147,6 +147,41 @@ public with sharing class RecordLocker {
 
         public UnlockResult(Boolean didSucceed, String message) {
             super(didSucceed, message);
+        }
+    }
+
+    @AuraEnabled
+    public static WaitResult requestWait(LockRequest request) {
+        return new RecordLocker().wait(request);
+    }
+
+    public WaitResult wait(LockRequest request) {
+
+        try {
+            // TODO: 
+            // Integer lockWaitCount = [SELECT COUNT() FROM Object_Lock_Wait__c WHERE sObject_Id__c = :request.sObjectId];
+            // if (lockWaitCount != 0) {
+            //     return new WaitResult(true, false);
+            // }
+            return new WaitResult(true, true);
+        }
+        catch (Exception e) {
+            return new WaitResult(false, 'An unexpected error happened: ' + e.getMessage());
+        }
+    }
+
+    public class WaitResult extends BaseResult {
+        @AuraEnabled
+        public Boolean canWait;
+
+        public WaitResult(Boolean didSucceed, Boolean canWait) {
+            this(didSucceed, (String)null);
+            this.canWait = canWait;
+        }
+
+        public WaitResult(Boolean didSucceed, String message) {
+            super(didSucceed, message);
+            this.canWait = false;
         }
     }
 }

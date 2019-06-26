@@ -7,7 +7,7 @@ public with sharing class RecordLockerTest {
         RecordLocker.LockRequest request = new RecordLocker.LockRequest(testId);
 
         // Case 1: object is not locked.
-        RecordLocker.LockStatusResult result = RecordLocker.getLockStatus(request);
+        RecordLocker.StatusResult result = RecordLocker.getLockStatus(request);
         System.assertEquals(true, result.canLockRecord, 'Expected to be able to lock the record.');
 
         // Case 2: object is already locked.

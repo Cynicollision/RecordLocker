@@ -19,7 +19,7 @@ export default class LockerBase extends LightningElement {
         getObjectLockConfig(request)
             .then(result => {
                 this.isLoading = false;
-                
+
                 if (result.isLockingEnabled) {
                     this.isReady = true;
                 }

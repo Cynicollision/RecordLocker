@@ -1,17 +1,43 @@
-import { LightningElement, api, track } from 'lwc';
-import lockRecord from '@salesforce/apex/RecordLocker.lock';
-import unlockRecord from '@salesforce/apex/RecordLocker.unlock';
+import { LightningElement, track } from 'lwc';
+import getStatus from '@salesforce/apex/RecordLocker.getLockStatus';
+import requestWait from '@salesforce/apex/RecordLocker.requestWait';
+import lockRecord from '@salesforce/apex/RecordLocker.lockRecord';
+import unlockRecord from '@salesforce/apex/RecordLocker.unlockRecord';
+
+class UIState {
+    isLoading = false;
+    isLockUnlockDisabled = true;
+    isRequestWaitDisabled = true;
+    isWaiting = false;
+    errorMessage = '';
+    lockMessage = '';
+
+    setCanLock() {
+        this.lockMessage = 'This record is unlocked';
+        this.isLockUnlockDisabled = false;
+    }
+
+    setError(errorMsg) {
+        this.errorMessage = errorMsg;
+    }
+
+    setLockedByOther(lockedByUserName) {
+        this.lockMessage = `This record is currently locked by ${lockedByUserName}.`;
+        this.isLockUnlockDisabled = true;
+    }
+
+    setWaiting() {
+        this.isLockUnlockDisabled = true;
+    }
+}
 
 export default class Locker extends LightningElement {
-    @api recordId;
-    @track errorMessage = '';
-    @track isLoading = false;
-    @track isLockUnlockDisabled = false;
-    @track hasLock = false;
-    @track hasLockWait = false;
-    @track lockExpiresIn = null;
-    @track lockStatusMessage = null;
+    @track foo;
 
+    @track lock = null;
+    @track uiState = new UIState();
+
+    // TODO: move to UIState
     get lockUnlockButtonText() {
         return this.hasLock ? 'Unlock' : 'Lock';
     }
@@ -20,87 +46,101 @@ export default class Locker extends LightningElement {
         return this.hasLock ? 'utility:unlock' : 'utility:lock';
     }
 
-    get canRequestLockWait() {
-        return !this.hasLockWait;
-    }
-
     get hasError() {
-        return errorMessage && errorMessage.length;
+        return this.uiState.errorMessage && this.uiState.errorMessage.length;
     }
 
     // Initialize component.
     connectedCallback() {
-        // TODO: Query for existing locks on this record, then set: isLockUnlockDisabled, hasLock, hasLockWait, lockExpiresIn, lockStatusMessage
-        this.lockStatusMessage = 'This record is unlocked.';
+        this.initializeUI();
+    }
+
+    initializeUI() {
+        let lockRequest = {
+            sObjectId: this.recordId,
+        };
+
+        getStatus(lockRequest).then(statusResult => {
+            if (!statusResult.didSucceed) {
+                this.uiState.setError(statusResult.message);
+            }
+            else if (statusResult.lockedByUserName) {
+                this.uiState.setLockedByOther('This record is unlocked.');
+            }
+            else if (statusResult.canLockRecord) {
+                this.uiState.setCanLock();
+            }
+        });
     }
 
     onClickLockUnlock() {
         this.isLoading = true;
 
-        let params = {
+        let lockRequest = {
             sObjectId: this.recordId,
         };
+        
+        let isLocking = !!this.lock;
 
-        let isLocking = !this.hasLock;
-        let promise = isLocking ? lockRecord(params) : unlockRecord(params);
-
-        promise.then(result => {
+        let promise = isLocking ? this.lockRecord(lockRequest) : this.unlockRecord(lockRequest);
+        promise.finally(() => {
             this.isLoading = false;
-
-            if (result.didSucceed) {
-                this.hasLock = true;
-                this.hasLockwait = false;
-                this.lockExpiresIn = result.lock.expiresAt;
-            }
-            else if (result.lockedByUserName) {
-                this.hasLock = false;
-                this.hasLockwait = false;
-                this.isLockUnlockDisabled = true;
-                this.lockStatusMessage = `This record is currently locked by ${lockedByUserName}.`;
-            }
-            else {
-                this.handleError(result.message);
-            }
         });
+    }
 
-        // TODO: Attempt to lock record.
-        // If successful: hasLock -> true, lockExpiresIn -> (time until result.lock.Expires_At__c)
-        // If not: lockedByUserName -> 
-        // setTimeout(() => {
-        //     this.hasLock = !this.hasLock;
-        //     this.isLoading = false;
-        // }, 2000);
+    lockRecord(lockRequest) {
+
+        getStatus(lockRequest).then(statusResult => {
+            if (!statusResult.didSucceed) {
+                this.uiState.setError(statusResult.message);
+            }
+
+            if (!statusResult.canLockRecord && statusResult.lockedByUserName) {
+                this.uiState.setLockedByOtherMessage(statusResult.lockedByUserName);
+                return;
+            }
+            
+            lockRecord(lockRequest).then(lockResult => {
+                if (!lockResult.didSucceed) {
+                    this.uiState.setError(lockResult.message);
+                    return;
+                }
+
+                this.lock = lockResult.lock;
+            });
+        });
+    }
+
+    unlockRecord(lockRequest) {
+
+        unlockRecord(lockRequest).then(unlockResult => {
+            if (!unlockResult.didSucceed) {
+                this.uiState.setError(unlockResult.message);
+                return;
+            }
+
+            this.lock = null;
+        });
     }
 
     onClickRequestNotification() {
         this.isLoading = true;
 
-        // TODO:
-        setTimeout(() => {
-            this.isLoading = false;
-            this.hasLockWait = true;
-        }, 2000);
-    }
+        let lockRequest = {
+            sObjectId: this.recordId,
+        };
 
-    onClickExtend() {
-        this.isLoading = true;
+        requestWait(lockRequest).then(waitResult => {
+            if (!waitResult.didSucceed) {
+                this.uiState.setError(waitResult.message);
+                return;
+            }
 
-        // TODO:
-        setTimeout(() => {
-            this.isLoading = false;
-        }, 2000);
+            this.uiState.isWaiting = true
+        });
     }
 
     onClickRefresh() {
-        this.isLoading = true;
-
-        // TODO:
-        setTimeout(() => {
-            this.isLoading = false;
-        }, 2000);
-    }
-
-    handleError(errorMessage) {
-        this.errorMessage = errorMessage;
+        this.initializeUI();
     }
 }

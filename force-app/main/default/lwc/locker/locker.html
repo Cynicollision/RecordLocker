@@ -1,5 +1,5 @@
 <template>
-    <template if:true={isLoading}>
+    <template if:true={uiState.isLoading}>
         <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
     </template>
     <template if:true={hasError}>
@@ -10,7 +10,7 @@
                 <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#error"></use>
             </svg>
             </span>
-            <h2>{errorMessage}</h2>
+            <h2>{uiState.errorMessage}</h2>
             <div class="slds-notify__close">
             <button class="slds-button slds-button_icon slds-button_icon-small slds-button_icon-inverse" title="Close">
                 <svg class="slds-button__icon" aria-hidden="true">
@@ -24,7 +24,7 @@
     <div>
         <div class="slds-clearfix">
             <div class="slds-float_left">
-                <span>{lockStatusMessage}</span>
+                <span>{uiState.lockStatusMessage}</span>
             </div>
             <div class="slds-float_right">
                 <lightning-button-icon icon-name="utility:refresh" onclick={onClickRefresh} alternative-text="Refresh"></lightning-button-icon>
@@ -32,13 +32,13 @@
         </div>
     </div>
     <div class="slds-m-bottom_medium">
-        <lightning-button variant="brand" label={lockUnlockButtonText} icon-name={lockUnlockButtonIcon} onclick={onClickLockUnlock} title="Lock/Unlock" disabled={isLockUnlockDisabled}></lightning-button>
+        <lightning-button variant="brand" label={lockUnlockButtonText} icon-name={lockUnlockButtonIcon} onclick={onClickLockUnlock} title="Lock/Unlock" disabled={uiState.isLockUnlockDisabled}></lightning-button>
     </div>
     <div class="slds-m-top_medium">
-        <template if:true={canRequestLockWait}>
+        <template if:false={uiState.isRequestWaitDisabled}>
             <span><a role="button" onclick={onClickRequestNotification}>Click here</a> to be notified when this record is available.</span>
         </template>
-        <template if:true={hasLockWait}>
+        <template if:true={uiState.isWaiting}>
             <span>You will be notified when this record is unlocked.</span>
         </template>
     </div>
